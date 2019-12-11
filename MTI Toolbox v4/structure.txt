@@ -1,0 +1,245 @@
+## This is tab limited file that specified structure of binary hexadecimal data received via UDP. The first parameter represents name
+## of field that will present in output XML, second parameter represents number of bytes that it represents in input data and third 
+## parameter represents whether its value has to be parsed as ASCII (A) or decimal (D) value. If no parsing needs to be done, then specify 'None'.
+
+#packetHeader
+versionID	2	A
+packetSize	4	I
+nationality	2	A
+classification	1	E
+packetSecurityClassSystem	2	A
+caveat	2	F
+exerciseIndicator	1	E
+platformID	10	A
+missionID	4	I
+jobID	4	I
+
+## segments
+
+#segmentHeader
+segmentType	1	E
+segmentSize	4	I
+
+#freeTextSegment
+originatorID	10	A
+recipientID	10	A
+freeText	0	A
+
+#missionSegment
+missionPlan	12	A
+flightPlan	12	A
+platformType	1	E
+platformConfig	10	A
+year	2	I
+month	1	I
+day	1	I
+
+#segmentDwell
+existenceMask	8	F
+revisitIndex	2	I
+dwellIndex	2	I
+lastDwellOfRevisit	1	F
+targetReportCount	2	I
+dwellTime	4	I
+sensorLat	4	SA
+sensorLon	4	BA
+sensorAlt	4	S
+latScale	4	SA
+lonScale	4	BA
+sensorUncertaintyAlong	4	I
+sensorUncertaintyCross	4	I
+sensorUncertaintyAlt	2	I
+sensorTrack	2	BA
+sensorSpeed	4	I
+sensorVerticleVelocity	1	S
+sensorTrackUncertainty	1	I
+sensorSpeedUncertainty	2	I
+sensorVertVelUncertainty	2	I
+platformHeading	2	BA
+platformPitch	2	SA
+platformRoll	2	SA
+dwellCenterLat	4	SA
+dwellCenterLon	4	BA
+dwellRangeHalfEx	2	B
+dwellAngleHalfEx	2	BA
+sensorHeading	2	BA
+sensorPitch	2	SA
+sensorRoll	2	SA
+mdv	1	I
+
+#jobDefinition
+jobID	4	I
+sensorType	1	E
+sensorModel	6	A
+targetFilteringFlag	1	F
+priority	1	I
+cornerALat	4	SA
+cornerALon	4	BA
+cornerBLat	4	SA
+cornerBLon	4	BA
+cornerCLat	4	SA
+cornerCLon	4	BA
+cornerDLat	4	SA
+cornerDLon	4	BA
+radarMode	1	E
+nominalRevisitInterval	2	I
+sensorUncertaintyAlong	2	I
+sensorUncertaintyCross	2	I
+sensorUncertaintyAlt	2	I
+sensorUncertaintyHeading	1	I
+sensorUncertaintySpeed	2	I
+nominalSensorValueSlant	2	I
+nominalSensorValueCross	2	BA
+nominalSensorValueTgtVelocity	2	I
+nominalSensorValueMDV	1	I
+nominalSensorValueDetection	1	I
+nominalSensorValueFalseAlaarm	1	I
+terrainElevationModel	1	E
+geoidModel	1	E
+
+#targetReport
+reportIndex	2	I
+hrLat	4	SA
+hrLon	4	BA
+deltaLat	2	S
+deltaLon	2	S
+geodeticHeight	2	S
+tgtRadialVelocity	2	S
+tgtWrapVelocity	2	I
+tgtSNR	1	S
+tgtClassification	1	E
+tgtClassProbUnc	1	I
+tgtSlantRangeUnc	2	I
+tgtCrossRangeUnc	2	I
+tgtHeightUnc	1	I
+tgtRadialVelocityUnc	2	I
+truthTagApp	1	I
+truthTagEntity	4	I
+tgtRadarCrossSect	1	S
+
+#hrrSegment
+existenceMask	5	F
+revisitIndex	2	I
+dwellIndex	2	I
+lastDwellOfRevisit	1	F
+reportIndex	2	I
+countTargetScatterers	2	I
+countRangeSamples	2	I
+countDooplerSamples	2	I
+meanClutterPower	1	I
+detectionThreashold	1	I
+rangeResolution	2	B
+rangeBinSpacing	2	B
+dopplerResolution	4	H
+dopplerBinSpacing	4	H
+centerFrequency	4	B
+compressionFlag	1	E
+rangeWeightingFunc	1	E
+dopplerWeightingFunc	1	E
+maxPowerPixel	2	B
+maxRCS	1	S
+rangeOrigin	2	S
+dopplerOrigin	4	H
+typeHRR	1	E
+processingMask	1	F
+countBytesMag	1	I
+countBytesPhase	1	I
+rangeExtent	1	I
+rangeNearestEdge	4	I
+zeroVelocityBinIndex	1	I
+tgtRadialElectricLen	4	B
+electricLenUncert	4	B
+
+#platformLocation
+platformLocationTime	4	I
+platformLatitude	4	SA
+platformLongitude	4	BA
+platformAltitude	4	S
+platformTrack	2	BA
+platformSpeed	4	I
+platformVerticalVelocity	1	S
+
+#jobRequestSegment
+requestorID	10	A
+requestorTaskID	10	A
+priority	1	I
+cornerALat	4	SA
+cornerALon	4	BA
+cornerBLat	4	SA
+cornerBLon	4	BA
+cornerCLat	4	SA
+cornerCLon	4	BA
+cornerDLat	4	SA
+cornerDLon	4	BA
+radarMode	1	E
+radarResolutionRange	2	I
+radarResolutionCross	2	I
+year	2	I
+month	1	I
+day	1	I
+hour	1	I
+minutes	1	I
+seconds	1	I
+allowedDelay	2	I
+duration	2	I
+revisitInterval	2	I
+sensorType	1	E
+sensorModel	6	A
+requestType	1	F
+
+#jobAwknowledgement
+jobID	4	I
+requestorID	10	A
+requestorTaskID	10	A
+priority	1	I
+cornerALat	4	SA
+cornerALon	4	BA
+cornerBLat	4	SA
+cornerBLon	4	BA
+cornerCLat	4	SA
+cornerCLon	4	BA
+cornerDLat	4	SA
+cornerDLon	4	BA
+radarMode	1	E
+duration	2	I
+revisitInterval	2	I
+requestStatus	1	E
+year	2	I
+month	1	I
+day	1	I
+hour	1	I
+minutes	1	I
+seconds	1	I
+requestorNationality	2	A
+
+#testStatusSegment
+jobID	4	I
+revisitIndex	2	I
+dwellIndex	2	I
+dwellTime	4	I
+hardwareStatus	1	F
+modeStatus	1	F
+
+#processingHistorySegment
+processingHistoryCount	1	I
+basedOnNationalID	2	A
+basedOnPlatformID	10	A
+basedOnMissionID	4	I
+basedOnJobID	4	I
+
+#processingRecord
+processingHisSeqNum	1	I
+nationalityModifyID	2	A
+platformModifyID	10	A
+missionModifyID	4	I
+jobID	4	I
+processingPerformed	2	F
+
+#hrrScatterReport
+scattererMagintude	0	I
+scattererPhase	0	I
+rangeIndex	1	I
+dopplerIndex	1	I
+
+#end
+thisSegmentIsToEnsureReadStructBreaks	999	X
