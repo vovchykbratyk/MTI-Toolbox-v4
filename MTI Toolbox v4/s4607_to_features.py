@@ -587,129 +587,137 @@ def parseFile(path):
         currentSegSize = 0
         currentPktLength = 0 #variable to count number of bytes in packet that have been read
         packetHeader, packetLength = parsePacketHeader(instream) #read packet header, return parsed header and number of bytes in the header
-        currentPktLength += packetLength #add the bytes in the packet header to total count of bytes
-        out.append(packetHeader) #add the header to output list
+        if packetHeader['versionID'] in ['10','20','30']:
+            currentPktLength += packetLength #add the bytes in the packet header to total count of bytes
+            out.append(packetHeader) #add the header to output list
 
-        if int(packetHeader['classification']) < highestClassification:
-            highestClassification = int(packetHeader['classification'])
-        if packetHeader['caveat'] not in caveats:
-            caveats.append(packetHeader['caveat'])
+            if int(packetHeader['classification']) < highestClassification:
+                highestClassification = int(packetHeader['classification'])
+            if packetHeader['caveat'] not in caveats:
+                caveats.append(packetHeader['caveat'])
 
-        packetSize = packetHeader['packetSize'] #retrieve the total number of bytes in this packet
-            
-        while currentPktLength < int(packetSize): #while the current count of bytes is less than the total expected bytes
-            #after identifying a packet header always expect a segment header
-            segmentHeader, segmentLength = parseSegmentHeader(instream) #read segment header, return parsed header and number of bytes in the header
-            out.append(segmentHeader) #add the header to output list
-
-            segmentType = str(segmentHeader['segmentType']) #get type of segment to parse for as a string
-            currentPktLength += segmentLength #add bytes from segment header to the total bytes expected for this segment
-            currentSegSize += segmentLength
-
-            if segmentType == '1':
-                missionSegment, msnSegLength = parseMissionSegment(instream)
-                out.append(missionSegment)
-                currentPktLength += msnSegLength
-                currentSegSize += msnSegLength
-                last_position = instream.tell()
-
-                day = missionSegment['day']
-                month = missionSegment['month']
-                year = missionSegment['year']
-
-                try:
-                    platformType = platforms[missionSegment['platformType']]
-                except:
-                    platformType = platforms['255']
-                if platformType not in platformsUsed:
-                    platformsUsed.append(platformType)
-
-
-            elif segmentType == '5':
-                jobDefinition, jobDefLength = parseJobDefinition(instream) #type 5 is a job definition, parse the definition
-                #arcpy.AddMessage(jobDefinition)
-                out.append(jobDefinition) #add job definition to output list
-                currentPktLength += jobDefLength #add bytes from the job definition to the total current bytes
-                currentSegSize += jobDefLength
-                last_position = instream.tell()
-
-                try:
-                    sensorType = sensor[jobDefinition['sensorType']] #get sensor type attribute and convert to plain text
-                except:
-                    sensorType = sensor['0']
+            packetSize = packetHeader['packetSize'] #retrieve the total number of bytes in this packet
                 
-                try:
-                    tModel = terrain[jobDefinition['terrainElevationModel']]
-                except:
-                    tModel = terrain['0']
-                if tModel not in terrainModel: #collect terrain models used in this collection for processing report
-                    terrainModel.append(tModel)
+            while currentPktLength < int(packetSize): #while the current count of bytes is less than the total expected bytes
+                #after identifying a packet header always expect a segment header
+                segmentHeader, segmentLength = parseSegmentHeader(instream) #read segment header, return parsed header and number of bytes in the header
+                out.append(segmentHeader) #add the header to output list
 
-            elif segmentType == '2':
-                dwellSegment, dwellSegLength, existMask = parseDwellSegment(instream)
-                out.append(dwellSegment)
-                currentPktLength += dwellSegLength
-                currentSegSize += dwellSegLength
-                last_position = instream.tell()
+                segmentType = str(segmentHeader['segmentType']) #get type of segment to parse for as a string
+                currentPktLength += segmentLength #add bytes from segment header to the total bytes expected for this segment
+                currentSegSize += segmentLength
 
-                fullTime = parseDwellTime(dwellSegment['dwellTime'])
+                if segmentType == '1':
+                    missionSegment, msnSegLength = parseMissionSegment(instream)
+                    out.append(missionSegment)
+                    currentPktLength += msnSegLength
+                    currentSegSize += msnSegLength
+                    last_position = instream.tell()
 
-                dwellSegment.update({'detectTime':fullTime})
-                dwellSegment.update({'platformType':platformType})
-                dwellSegment.update({'sensorType':sensorType})
-                dwellSegment.update({'file':fileName})
-                sensor_att_array.append(dwellSegment)
+                    day = missionSegment['day']
+                    month = missionSegment['month']
+                    year = missionSegment['year']
 
-                sensor_loc = arcpy.Point(dwellSegment['sensorLon'],dwellSegment['sensorLat'],int(dwellSegment['sensorAlt'])/100)
-                center_loc = arcpy.Point(dwellSegment['dwellCenterLon'],dwellSegment['dwellCenterLat'])
-                scanArea = dwellPolygon(center_loc,dwellSegment['dwellRangeHalfEx'],dwellSegment['dwellAngleHalfEx'],sensor_loc)
+                    try:
+                        platformType = platforms[missionSegment['platformType']]
+                    except:
+                        platformType = platforms['255']
+                    if platformType not in platformsUsed:
+                        platformsUsed.append(platformType)
 
-                for pt in scanArea:
-                    polygon_array.add(pt)
 
-                targetMask = existMask
-                targetRptCnt = int(dwellSegment['targetReportCount'])
-                if not targetRptCnt == 0:
-                    for s in range(0, targetRptCnt):
-                        targetReport, targetReportLength = parseTargetReport(instream, targetMask)
+                elif segmentType == '5':
+                    jobDefinition, jobDefLength = parseJobDefinition(instream) #type 5 is a job definition, parse the definition
+                    #arcpy.AddMessage(jobDefinition)
+                    out.append(jobDefinition) #add job definition to output list
+                    currentPktLength += jobDefLength #add bytes from the job definition to the total current bytes
+                    currentSegSize += jobDefLength
+                    last_position = instream.tell()
 
-                        targetReport.update({'detectTime':fullTime})
-                        targetReport.update({'dwellIndex':dwellSegment['dwellIndex']})
-                        targetReport.update({'revisitIndex':dwellSegment['revisitIndex']})
-                        targetReport.update({'platformType':platformType})
-                        targetReport.update({'sensorType':sensorType})
-                        targetReport.update({'file':fileName})
-                        out.append(targetReport)
-                        points_att_array.append(targetReport)
+                    try:
+                        sensorType = sensor[jobDefinition['sensorType']] #get sensor type attribute and convert to plain text
+                    except:
+                        sensorType = sensor['0']
+                    
+                    try:
+                        tModel = terrain[jobDefinition['terrainElevationModel']]
+                    except:
+                        tModel = terrain['0']
+                    if tModel not in terrainModel: #collect terrain models used in this collection for processing report
+                        terrainModel.append(tModel)
 
-                        currentPktLength += targetReportLength
-                        currentSegSize += targetReportLength
-                        last_position = instream.tell()
+                elif segmentType == '2':
+                    dwellSegment, dwellSegLength, existMask = parseDwellSegment(instream)
+                    out.append(dwellSegment)
+                    currentPktLength += dwellSegLength
+                    currentSegSize += dwellSegLength
+                    last_position = instream.tell()
 
-            elif segmentType == '13':
-                platformLoc, platformLocLen = parsePlatformLocation(instream)
-                out.append(platformLoc)
-                currentPktLength += platformLocLen
-                currentSegSize += platformLocLen
-                last_position = instream.tell()
+                    try:
+                        fullTime = parseDwellTime(dwellSegment['dwellTime'])
+                    except:
+                        fullTime = None
+                    
+                    dwellSegment.update({'detectTime':fullTime})
+                    dwellSegment.update({'platformType':platformType})
+                    dwellSegment.update({'sensorType':sensorType})
+                    dwellSegment.update({'file':fileName})
+                    sensor_att_array.append(dwellSegment)
 
-                if not day == month == year:
-                    fullTime = parseDwellTime(platformLoc['platformLocationTime'])
+                    sensor_loc = arcpy.Point(dwellSegment['sensorLon'],dwellSegment['sensorLat'],int(dwellSegment['sensorAlt'])/100)
+                    center_loc = arcpy.Point(dwellSegment['dwellCenterLon'],dwellSegment['dwellCenterLat'])
+                    scanArea = dwellPolygon(center_loc,dwellSegment['dwellRangeHalfEx'],dwellSegment['dwellAngleHalfEx'],sensor_loc)
+
+                    for pt in scanArea:
+                        polygon_array.add(pt)
+
+                    targetMask = existMask
+                    targetRptCnt = int(dwellSegment['targetReportCount'])
+                    if not targetRptCnt == 0:
+                        for s in range(0, targetRptCnt):
+                            targetReport, targetReportLength = parseTargetReport(instream, targetMask)
+
+                            targetReport.update({'detectTime':fullTime})
+                            targetReport.update({'dwellIndex':dwellSegment['dwellIndex']})
+                            targetReport.update({'revisitIndex':dwellSegment['revisitIndex']})
+                            targetReport.update({'platformType':platformType})
+                            targetReport.update({'sensorType':sensorType})
+                            targetReport.update({'file':fileName})
+                            out.append(targetReport)
+                            points_att_array.append(targetReport)
+
+                            currentPktLength += targetReportLength
+                            currentSegSize += targetReportLength
+                            last_position = instream.tell()
+
+                elif segmentType == '13':
+                    platformLoc, platformLocLen = parsePlatformLocation(instream)
+                    out.append(platformLoc)
+                    currentPktLength += platformLocLen
+                    currentSegSize += platformLocLen
+                    last_position = instream.tell()
+
+                    if not day == month == year:
+                        fullTime = parseDwellTime(platformLoc['platformLocationTime'])
+                    else:
+                        fullTime = None
+                    # fullTime = None
+
+                    platformLoc.update({'detectTime':fullTime})
+                    platformLoc.update({'file':fileName})
+
+                    platformLoc_seg_array.append(platformLoc)
+
                 else:
-                    fullTime = None
-                # fullTime = None
-
-                platformLoc.update({'detectTime':fullTime})
-                platformLoc.update({'file':fileName})
-
-                platformLoc_seg_array.append(platformLoc)
-
-            else:
-                #arcpy.AddMessage('{}: {}'.format('Unrecognized Segment', segmentType))
-                toRead = int(packetSize)-int(currentPktLength)
-                instream.read(toRead)
-                currentPktLength += toRead
-                last_position = instream.tell()
+                    arcpy.AddMessage('{}: {}'.format('Unrecognized Segment', segmentType))
+                    toRead = int(packetSize)-int(currentPktLength)
+                    instream.read(toRead)
+                    currentPktLength += toRead
+                    last_position = instream.tell()
+        else:
+            instream.seek(last_position)
+            instream.read(1)
+            last_position = instream.tell()
 
 
 
@@ -736,7 +744,6 @@ caveats = []
 def main():
     global points_att_array, sensor_att_array, polygon_array, sr, highestClassification
 
-    #get list of files to be parsed
     files = arcpy.GetParameter(0)
 
     fileCount = 0
